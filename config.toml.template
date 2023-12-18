@@ -1,0 +1,14 @@
+[frisquet]
+network_id = "XXXXXXXX"
+association_id = "XX"
+request_id = "XX"
+
+[serial]
+port = "/dev/cu.usbmodem111201"
+speed = 115200
+
+[mqtt]
+broker = "tcp://localhost:1883"
+client_id = "frisquet-connect"
+cmd_topic = "/frisquet/cmd"
+lst_topic = "/frisquet/listen"
