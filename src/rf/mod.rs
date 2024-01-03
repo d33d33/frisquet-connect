@@ -21,7 +21,10 @@ pub fn new(config: &config::Config) -> Result<Box<dyn RFClient>, String> {
         None => {}
     }
     match &config.serial {
-        Some(config) => return Ok(Box::new(serial::new(&config)?)),
+        Some(config) => {
+            println!("frisquet-connect on serial");
+            return Ok(Box::new(serial::new(&config)?))
+        },
         None => {}
     }
     Err("no client configured".to_string())

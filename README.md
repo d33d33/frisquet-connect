@@ -5,6 +5,7 @@
 ### Upload an rf sketch
 
 A sketch for a feather M0, is available under `/arduino`
+A sketch for a heltech lora v3 is available under `/heltech-frisquet-serial`
 
 ### Create a `config.toml` config file
 
