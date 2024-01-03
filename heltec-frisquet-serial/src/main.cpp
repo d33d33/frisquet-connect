@@ -6,6 +6,7 @@
 #include <iostream>
 
 SX1262 radio = new Module(SS, DIO0, RST_LoRa, BUSY_LoRa);
+
 int receiveddCount = 0;
 
 typedef std::vector<uint8_t> ByteBuffer;
@@ -64,6 +65,9 @@ void setup()
     state = radio.setFrequencyDeviation(50.0);
     state = radio.setRxBandwidth(250.0);
     state = radio.setPreambleLength(4);
+    state = radio.setRxBoostedGainMode(true);
+    state = radio.setOutputPower(22);
+
     // uint8_t network_id[] = {5, 218, 46, 226};
     uint8_t network_id[] = {0x12, 0x34, 0x56, 0x78};
     state = radio.setSyncWord(network_id, sizeof(network_id));
