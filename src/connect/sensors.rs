@@ -7,10 +7,12 @@ use crate::config;
 use crate::connect::{filter, from_bytes, send_cmd, Cmd, ConnectError, Metadata};
 use crate::rf::RFClient;
 
+use super::Assert;
+
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 #[deku(endian = "big")]
 pub struct SensorsMsg {
-    unknown: u8,
+    len: u8,
     temp_ecs: i16,
     temp_cdc: i16,
     temp_depart_1: i16,
@@ -118,6 +120,12 @@ impl fmt::Display for SensorsMsg {
     }
 }
 
+impl Assert for SensorsMsg {
+    fn assert(&self) -> bool {
+        self.len as usize == 0x38 // length is expected to represent the msg length(56)
+    }
+}
+
 pub fn connect_sensors(
     rf: &mut Box<dyn RFClient>,
     config: &mut config::Frisquet,
@@ -134,7 +142,7 @@ pub fn connect_sensors(
         req_id,
         1,
         03,
-        Cmd {
+        &Cmd {
             data: vec![0x79, 0xe0, 0x00, 0x1c],
         },
     )?;

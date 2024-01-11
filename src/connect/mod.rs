@@ -6,8 +6,16 @@ use std::fmt::{Debug, Display};
 use crate::config::ConfigError;
 use crate::rf::{RFClient, RecvError, RecvTimeoutError, SendError};
 
+pub mod area;
+pub mod boiler;
+pub mod data1;
+pub mod data2;
+pub mod data3;
+pub mod data4;
+pub mod date;
 pub mod pair;
 pub mod sensors;
+pub mod promiscuous;
 
 #[derive(Debug, PartialEq, DekuRead, DekuWrite, Clone)]
 #[deku(endian = "big")]
@@ -25,7 +33,8 @@ impl fmt::Display for Metadata {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(
             f,
-            "0x{:02x} > 0x{:02x} [{:02x}|{:02x}] {:02x} {:02x}, ", // TODO #
+            "({:02x}) 0x{:02x} > 0x{:02x} [{:02x}|{:02x}] {:02x} {:02x}, ",
+            self.length,
             self.from_addr,
             self.to_addr,
             self.association_id,
@@ -33,6 +42,22 @@ impl fmt::Display for Metadata {
             self.control,
             self.msg_type,
         )
+    }
+}
+
+#[derive(Debug, PartialEq, DekuRead)]
+#[deku(endian = "big")]
+struct DropMsg {}
+
+impl fmt::Display for DropMsg {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "DROPPED")
+    }
+}
+
+impl Assert for DropMsg {
+    fn assert(&self) -> bool {
+        true
     }
 }
 
@@ -56,7 +81,7 @@ pub fn send_cmd<T>(
     request_id: u8,
     control: u8,
     msg_type: u8,
-    cmd: T,
+    cmd: &T,
 ) -> Result<(), ConnectError>
 where
     T: DekuContainerWrite + Display,
@@ -76,7 +101,7 @@ where
     payload.append(&mut data);
     let data = hex::encode(payload.clone());
 
-    println!("SEND {} {}", metadata, data);
+    println!("SEND {}{}", metadata, data);
 
     Ok(rf.send(payload)?)
 }
@@ -108,11 +133,31 @@ pub fn filter(
 
 pub fn from_bytes<'a, T>(payload: &'a Vec<u8>) -> Result<(Metadata, T), DekuError>
 where
-    T: DekuContainerRead<'a>,
+    T: DekuContainerRead<'a> + Assert,
 {
     let (_, meta) = Metadata::from_bytes((payload, 0))?;
     let (_, data) = T::from_bytes((&payload[7..], 0))?;
+    assert!(data.assert());
     Ok((meta, data))
+}
+
+fn format_day(data: [u8; 6]) -> String {
+    let mut out = String::new();
+    for d in data {
+        out.push_str(
+            format!("{:08b}", d)
+                .chars()
+                .rev()
+                .collect::<String>()
+                .as_str(),
+        )
+    }
+
+    out
+}
+
+pub trait Assert {
+    fn assert(&self) -> bool;
 }
 
 #[derive(PartialEq, Eq, Clone, Debug)]

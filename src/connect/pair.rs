@@ -6,6 +6,8 @@ use std::time::Duration;
 use crate::connect::{from_bytes, send_cmd, ConnectError, Metadata};
 use crate::rf::RFClient;
 
+use super::Assert;
+
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 #[deku(endian = "big")]
 struct AssociationCmd {
@@ -15,7 +17,7 @@ struct AssociationCmd {
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 #[deku(endian = "big")]
 struct AssociationMsg {
-    unknown: u8,
+    len: u8,
     network_id: [u8; 4],
 }
 
@@ -37,6 +39,12 @@ impl fmt::Display for AssociationMsg {
         let data = self.to_bytes().map(hex::encode).unwrap_or("ERROR".into());
         write!(f, "{}\n    AssociationMsg", data)?;
         write!(f, "\n\tNetwork ID: {}", hex::encode(self.network_id))
+    }
+}
+
+impl Assert for AssociationMsg {
+    fn assert(&self) -> bool {
+        self.len as usize == self.network_id.len() // length is expected to represent the network_id length
     }
 }
 
@@ -71,7 +79,7 @@ pub fn connect_association(rf: &mut Box<dyn RFClient>) -> Result<Association, Co
                     meta.request_id,
                     0x82,
                     meta.msg_type,
-                    AssociationCmd {
+                    &AssociationCmd {
                         version: [0x01, 0x21, 0x01, 0x02],
                     }, // frisquet connect version
                 )?;
