@@ -40,3 +40,19 @@ cargo run -- pair
 ``` bash
 cargo run -- sensors 
 ```
+
+### Configure area 1
+
+Update `area1` config in your `config.toml` (see template).
+The boiler may take a while to process this command (up to 5min).
+`frisquet-connect` will retry if needed.
+
+``` bash
+cargo run -- area1 
+```
+
+### Get available commands
+
+``` bash
+cargo run -- help 
+```

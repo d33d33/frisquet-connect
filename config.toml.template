@@ -12,3 +12,47 @@ broker = "tcp://localhost:1883"
 client_id = "frisquet-connect"
 cmd_topic = "/frisquet/cmd"
 lst_topic = "/frisquet/listen"
+
+[area1]
+comfort = 21.5
+reduced = 19.0
+frost = 8.5
+mode = "auto"
+boost = false
+override = "none"
+
+[[area1.monday]]
+timeframe = "06h30-23h30"
+mode = "comfort"
+
+[[area1.tuesday]]
+timeframe = "06h30-23h30"
+mode = "comfort"
+
+[[area1.wednesday]]
+timeframe = "06h30-23h30"
+mode = "comfort"
+
+[[area1.thursday]]
+timeframe = "06h30-23h30"
+mode = "comfort"
+
+[[area1.friday]]
+timeframe = "06h30-00h00"
+mode = "comfort"
+
+[[area1.saturday]]
+timeframe = "00h00-01h00"
+mode = "comfort"
+
+[[area1.saturday]]
+timeframe = "06h00-00h00"
+mode = "comfort"
+
+[[area1.sunday]]
+timeframe = "00h00-01h00"
+mode = "comfort"
+
+[[area1.sunday]]
+timeframe = "06h00-23h30"
+mode = "comfort"
