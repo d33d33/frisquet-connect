@@ -109,6 +109,7 @@ impl RFClient for SerialClient {
         let now = Instant::now();
         loop {
             if let Some(data) = self.try_recv()? {
+                println!("received : {}", hex::encode(data.clone()));
                 return Ok(data);
             }
 

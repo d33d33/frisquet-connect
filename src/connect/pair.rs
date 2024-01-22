@@ -1,9 +1,11 @@
-use deku::prelude::*;
-use hex;
 use std::fmt;
 use std::time::Duration;
 
+use deku::prelude::*;
+use hex;
+
 use crate::connect::{from_bytes, send_cmd, ConnectError, Metadata};
+
 use crate::rf::RFClient;
 
 use super::Assert;
@@ -48,7 +50,17 @@ impl Assert for AssociationMsg {
     }
 }
 
-pub fn connect_association(rf: &mut Box<dyn RFClient>) -> Result<Association, ConnectError> {
+impl Assert for AssociationCmd {
+    fn assert(&self) -> bool {
+        // Doesn't seem to have length
+        true
+    }
+}
+
+pub fn connect_association(
+    rf: &mut Box<dyn RFClient>,
+    from: u8,
+) -> Result<Association, ConnectError> {
     let network_id: Vec<u8> = vec![0xff, 0xff, 0xff, 0xff];
     rf.set_network_id(network_id)?;
     println!("Setting network_id to ffffffff"); // TODO log in set_network_id
@@ -59,10 +71,10 @@ pub fn connect_association(rf: &mut Box<dyn RFClient>) -> Result<Association, Co
         match wait_association_msg(rf, Duration::new(5, 0))? {
             Some((meta, data)) => {
                 if meta.control != 0x02 {
-                    panic!("unexpected control")
+                    panic!("unexpected control {:#04x} != 0x02", meta.control)
                 }
                 if meta.msg_type != 0x41 {
-                    panic!("unexpected msg_type")
+                    panic!("unexpected msg_type {:#04x} != 0x41", meta.msg_type)
                 }
 
                 res = Some(Association {
@@ -70,14 +82,14 @@ pub fn connect_association(rf: &mut Box<dyn RFClient>) -> Result<Association, Co
                     association_id: meta.association_id,
                     request_id: meta.request_id,
                 });
-
+                println!("Sending association command:");
                 send_cmd(
                     rf,
-                    0x7e,
+                    from,
                     0x80,
                     meta.association_id,
                     meta.request_id,
-                    0x82,
+                    meta.control + 0x80,
                     meta.msg_type,
                     &AssociationCmd {
                         version: [0x01, 0x21, 0x01, 0x02],
@@ -117,5 +129,65 @@ fn wait_association_msg(
         println!("RECV {} {}", meta, data);
 
         return Ok(Some((meta, data)));
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_association_msg() {
+        let payload = hex::decode("0b008012d402410412345678").unwrap();
+        // let (_, payload) = dbg_dmp(parse_data, "data")(&payload.as_slice()).unwrap();
+        let (meta, data) = from_bytes(&payload).unwrap();
+        let x: AssociationMsg = data;
+
+        assert_eq!(
+            meta,
+            Metadata {
+                length: 11,
+                to_addr: 0,
+                from_addr: 128,
+                association_id: 18,
+                request_id: 212,
+                control: 0x02,
+                msg_type: 0x41,
+            }
+        );
+        assert_eq!(
+            x,
+            AssociationMsg {
+                len: 4,
+                network_id: [0x12, 0x34, 0x56, 0x78],
+            }
+        );
+    }
+
+    #[test]
+    fn test_association_reply() {
+        let payload = hex::decode("0a80094914824101270002").unwrap();
+        // let (_, payload) = dbg_dmp(parse_data, "data")(&payload.as_slice()).unwrap();
+        let (meta, data) = from_bytes(&payload).unwrap();
+        let x: AssociationCmd = data;
+
+        assert_eq!(
+            meta,
+            Metadata {
+                length: 10,
+                to_addr: 128,
+                from_addr: 0x09,
+                association_id: 73,
+                request_id: 20,
+                control: 0x02 + 0x80,
+                msg_type: 0x41,
+            }
+        );
+        assert_eq!(
+            x,
+            AssociationCmd {
+                version: [0x01, 0x27, 0x00, 0x02]
+            }
+        );
     }
 }

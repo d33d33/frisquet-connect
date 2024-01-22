@@ -2,6 +2,7 @@ use colored::Colorize;
 use deku::prelude::*;
 use hex;
 use std::fmt;
+use std::time::Duration;
 
 use crate::config;
 use crate::connect::{filter, from_bytes, send_cmd, Cmd, ConnectError, Metadata};
@@ -148,7 +149,13 @@ pub fn connect_sensors(
     )?;
 
     loop {
-        match filter(&rf.recv()?, 0x80, 0x7e, config.association_id()?, req_id)? {
+        match filter(
+            &rf.recv_timeout(Duration::new(5, 0))?,
+            0x80,
+            0x7e,
+            config.association_id()?,
+            req_id,
+        )? {
             Some(payload) => {
                 let (meta, data) = from_bytes(&payload)?;
                 println!("RECV {} {}", meta, data);

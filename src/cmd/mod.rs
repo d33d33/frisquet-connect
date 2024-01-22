@@ -1,4 +1,4 @@
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ValueEnum};
 use std::error::Error;
 
 use crate::config::Config;
@@ -13,6 +13,7 @@ pub mod date;
 pub mod pair;
 pub mod promiscuous;
 pub mod sensors;
+pub mod sonde;
 
 #[derive(Parser)]
 #[command(author, version, about, long_about = None)]
@@ -37,7 +38,10 @@ pub struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// pair with boiler
-    Pair,
+    Pair {
+        #[arg(value_enum)]
+        from: Entity,
+    },
     /// get sensors
     Sensors,
     /// get data1 - not decoded
@@ -54,6 +58,16 @@ enum Commands {
     Promiscuous,
     /// set area1 prog
     Area1,
+    Sonde,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
+enum Entity {
+    Connect,
+    Satellite_Z1,
+    Satellite_Z2,
+    Satellite_Z3,
+    Sonde,
 }
 
 pub fn parse() -> Cli {
@@ -67,7 +81,7 @@ impl Cli {
         config: &mut Config,
     ) -> Result<(), Box<dyn Error>> {
         match self.command {
-            Some(Commands::Pair) => pair::run(rf, config),
+            Some(Commands::Pair { from }) => pair::run(rf, from, config),
             Some(Commands::Sensors) => sensors::run(rf, config),
             Some(Commands::Date) => date::run(rf, config),
             Some(Commands::Promiscuous) => promiscuous::run(rf, config),
@@ -76,6 +90,7 @@ impl Cli {
             Some(Commands::Data2) => data2::run(rf, config),
             Some(Commands::Data3) => data3::run(rf, config),
             Some(Commands::Data4) => data4::run(rf, config),
+            Some(Commands::Sonde) => sonde::run(rf, config),
             None => {
                 println!("main");
                 Ok(())
