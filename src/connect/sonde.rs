@@ -55,8 +55,8 @@ pub struct SetExternalTemperatureReplyMsg {
     hour: u8,
     minute: u8,
     second: u8,
-    #[deku(count = "2")]
-    data: Vec<u8>,
+    data: u8,
+    weekday: u8,
 }
 
 impl fmt::Display for SetExternalTemperatureReplyMsg {
@@ -66,7 +66,7 @@ impl fmt::Display for SetExternalTemperatureReplyMsg {
                 Ok(data) => {
                     write!(
                         f,
-                        "{}{}{}{}{}{}{}{}",
+                        "{}{}{}{}{}{}{}{}{}",
                         data[0..2].yellow(),
                         data[2..4].blue(),
                         data[4..6].purple(),
@@ -74,7 +74,8 @@ impl fmt::Display for SetExternalTemperatureReplyMsg {
                         data[8..10].red(),
                         data[10..12].green(),
                         data[12..14].bright_magenta(),
-                        data[14..18].white(),
+                        data[14..16].white(),
+                        data[16..].blue(),
                     )?;
 
                     write!(f, "\n    SetExternalTemperatureReplyMsg")?;
@@ -93,12 +94,13 @@ impl fmt::Display for SetExternalTemperatureReplyMsg {
                         "\n\t {}",
                         format!("Seconds: {:0x}", self.second).bright_magenta()
                     )?;
-
                     write!(
                         f,
                         "\n\t {}",
-                        format!("data: {}", hex::encode(self.data.as_slice())).white()
-                    )
+                        format!("data: {:0x}", self.data).white()
+                    )?;
+                    write!(f, "\n\t {}", format!("Weekday: {}", self.weekday).blue())
+
                 }
                 Err(_) => write!(f, "ERROR"),
             }
@@ -182,10 +184,10 @@ pub fn send_temperature(
         0x80, // to
         config.association_id()?,
         req_id,
-        1,
+        0x01,
         0x17,
         &SetExternalTemperatureMsg {
-            data: [156, 84, 0, 4, 160, 41, 0, 1, 2],
+            data: [0x9c, 0x54, 0x00, 0x04, 0xa0, 0x29, 0x00, 0x01, 0x02],
             temperature: (temperature * 10.0) as i16,
         },
     )?;
@@ -288,7 +290,8 @@ mod tests {
                 hour: 17,
                 minute: 49,
                 second: 23,
-                data: [40, 3].to_vec(),
+                data: 40,
+                weekday: 3,
             }
         );
     }

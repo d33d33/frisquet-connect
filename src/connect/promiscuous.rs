@@ -27,9 +27,9 @@ pub fn connect_promiscuous(
             }
         };
 
-        if meta.from_addr != 0x7e && meta.to_addr != 0x7e {
-            continue;
-        }
+        // if meta.from_addr != 0x7e && meta.to_addr != 0x7e {
+        //     continue;
+        // }
 
         match inflight.get(&meta.request_id) {
             None => match meta.msg_type {
