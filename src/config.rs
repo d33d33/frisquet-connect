@@ -9,6 +9,8 @@ use toml;
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Config {
     pub frisquet: Option<Frisquet>,
+    pub sonde: Option<Frisquet>,
+
     pub serial: Option<Serial>,
     pub mqtt: Option<MQTT>,
     pub area1: Option<Area>,
@@ -19,6 +21,7 @@ pub struct Config {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Frisquet {
+    pub send_init: bool,
     #[serde(serialize_with = "slice_as_hex", deserialize_with = "slice_from_hex")]
     pub network_id: Option<[u8; 4]>,
     #[serde(serialize_with = "u8_as_hex", deserialize_with = "u8_from_hex")]
@@ -26,11 +29,13 @@ pub struct Frisquet {
     #[serde(serialize_with = "u8_as_hex", deserialize_with = "u8_from_hex")]
     pub request_id: Option<u8>,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Serial {
     pub port: String,
     pub speed: u32,
 }
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct MQTT {
     pub broker: String,
@@ -79,6 +84,12 @@ impl Config {
         match &mut self.frisquet {
             Some(frisquet) => Ok(frisquet),
             None => Err(ConfigError::new("missing required config: frisquet")),
+        }
+    }
+    pub fn sonde(&mut self) -> Result<&mut Frisquet, ConfigError> {
+        match &mut self.sonde {
+            Some(frisquet) => Ok(frisquet),
+            None => Err(ConfigError::new("missing required config: sonde")),
         }
     }
 
@@ -283,6 +294,7 @@ where
         None => serializer.serialize_none(),
     }
 }
+
 fn slice_from_hex<'de, const N: usize, D>(deserializer: D) -> Result<Option<[u8; N]>, D::Error>
 where
     D: Deserializer<'de>,
@@ -305,6 +317,7 @@ where
         None => Ok(None),
     }
 }
+
 fn u8_as_hex<S>(option: &Option<u8>, serializer: S) -> Result<S::Ok, S::Error>
 where
     S: Serializer,
@@ -317,6 +330,7 @@ where
         None => serializer.serialize_none(),
     }
 }
+
 fn u8_from_hex<'de, D>(deserializer: D) -> Result<Option<u8>, D::Error>
 where
     D: Deserializer<'de>,
@@ -349,6 +363,7 @@ impl ConfigError {
         ConfigError { msg: msg.into() }
     }
 }
+
 impl fmt::Display for ConfigError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         std::fmt::Display::fmt(&self.msg, f)
@@ -364,6 +379,7 @@ impl From<std::io::Error> for ConfigError {
         }
     }
 }
+
 impl From<toml::de::Error> for ConfigError {
     fn from(err: toml::de::Error) -> ConfigError {
         ConfigError {
@@ -371,6 +387,7 @@ impl From<toml::de::Error> for ConfigError {
         }
     }
 }
+
 impl From<toml::ser::Error> for ConfigError {
     fn from(err: toml::ser::Error) -> ConfigError {
         ConfigError {

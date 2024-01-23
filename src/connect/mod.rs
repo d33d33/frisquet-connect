@@ -14,8 +14,9 @@ pub mod data3;
 pub mod data4;
 pub mod date;
 pub mod pair;
-pub mod sensors;
 pub mod promiscuous;
+pub mod sensors;
+pub mod sonde;
 
 #[derive(Debug, PartialEq, DekuRead, DekuWrite, Clone)]
 #[deku(endian = "big")]

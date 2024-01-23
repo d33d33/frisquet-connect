@@ -6,6 +6,7 @@ use crate::config;
 
 pub mod mqtt;
 pub mod serial;
+pub mod test;
 
 pub trait RFClient {
     fn set_network_id(&mut self, network_id: Vec<u8>) -> Result<(), String>;
@@ -23,8 +24,8 @@ pub fn new(config: &config::Config) -> Result<Box<dyn RFClient>, String> {
     match &config.serial {
         Some(config) => {
             println!("frisquet-connect on serial");
-            return Ok(Box::new(serial::new(&config)?))
-        },
+            return Ok(Box::new(serial::new(&config)?));
+        }
         None => {}
     }
     Err("no client configured".to_string())
