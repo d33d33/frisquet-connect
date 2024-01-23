@@ -41,10 +41,6 @@ impl fmt::Display for DateMsg {
                     data[16..].yellow(),
                 )?;
 
-                // 020103a10000000600000c9b000d01bb00000000000000000000 01c1 00c6 00c6// 0.6
-                // 01fd03840000000500001c9b000d01a400000000000000000000 01b4 00c6 00c6 // 1.3
-                // 01ad00000000000000001a00000d016300000000000000000000 01b0 00c6 00c6 // 1.3
-
                 write!(f, "\n    DateMsg")?;
                 write!(f, "\n\t {}", format!("Year: {:x}", self.year).yellow())?;
                 write!(f, "\n\t {}", format!("Month: {:x}", self.month).purple())?;

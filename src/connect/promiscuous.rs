@@ -4,7 +4,7 @@ use hex;
 use std::collections::HashMap;
 
 use crate::config;
-use crate::connect::{area, boiler, from_bytes, sensors, ConnectError, Metadata};
+use crate::connect::{area, boiler, from_bytes, sensors, ConnectError, Metadata, holiday};
 use crate::rf::RFClient;
 
 use super::date;
@@ -52,18 +52,36 @@ pub fn connect_promiscuous(
                             inflight.insert(meta.request_id, "a1540018".into());
                         }
                         [0xa0, 0xf0, 0x00, 0x15] => {
-                            let data = match from_bytes::<boiler::BoilerMsg>(payload) {
-                                Ok((_, data)) => data,
-                                Err(e) => {
-                                    println!(
-                                        "ProgMsg err: {} - {}",
-                                        e.to_string(),
-                                        hex::encode(&payload[7..])
-                                    );
-                                    continue;
+                            match meta.from_addr {
+                                0x7e => {
+                                    let data = match from_bytes::<holiday::HolidayMsg>(payload) {
+                                        Ok((_, data)) => data,
+                                        Err(e) => {
+                                            println!(
+                                                "HolidayMsg err: {} - {}",
+                                                e.to_string(),
+                                                hex::encode(&payload[7..])
+                                            );
+                                            continue;
+                                        }
+                                    };
+                                    println!("=> {} {}", meta, data);
+                                }
+                                _ => {
+                                    let data = match from_bytes::<boiler::BoilerMsg>(payload) {
+                                        Ok((_, data)) => data,
+                                        Err(e) => {
+                                            println!(
+                                                "ProgMsg err: {} - {}",
+                                                e.to_string(),
+                                                hex::encode(&payload[7..])
+                                            );
+                                            continue;
+                                        }
+                                    };
+                                    println!("=> {} {}", meta, data);
                                 }
                             };
-                            println!("=> {} {}", meta, data);
                             inflight.insert(meta.request_id, "a0f00015".into());
                         }
                         _ => {
