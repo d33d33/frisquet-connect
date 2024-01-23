@@ -13,9 +13,9 @@ pub fn run(
     let from_addr = match from {
         Entity::Connect => 0x7e,
         Entity::Sonde => 0x20,
-        Entity::Satellite_Z1 => 0x08,
-        Entity::Satellite_Z2 => 0x09,
-        Entity::Satellite_Z3 => 0x0A,
+        Entity::SatelliteZ1 => 0x08,
+        Entity::SatelliteZ2 => 0x09,
+        Entity::SatelliteZ3 => 0x0A,
     };
     let ass = connect_association(rf, from_addr)?;
 
@@ -41,9 +41,9 @@ pub fn run(
                 send_init: Some(true),
             })
         }
-        Entity::Satellite_Z1 => (),
-        Entity::Satellite_Z2 => (),
-        Entity::Satellite_Z3 => (),
+        Entity::SatelliteZ1 => (),
+        Entity::SatelliteZ2 => (),
+        Entity::SatelliteZ3 => (),
     };
 
     Ok(())

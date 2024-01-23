@@ -2,7 +2,6 @@ use crate::config;
 use crate::datasource::externaltemperature::ExternalTemperatureErr;
 use serde_json::Value;
 use std::collections::HashMap;
-use std::fmt::format;
 
 impl From<reqwest::Error> for ExternalTemperatureErr {
     fn from(value: reqwest::Error) -> Self {

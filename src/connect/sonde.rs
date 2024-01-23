@@ -1,5 +1,5 @@
 use crate::config;
-use crate::connect::{filter, from_bytes, send_cmd, Assert, Cmd, ConnectError, Metadata};
+use crate::connect::{filter, from_bytes, send_cmd, Assert, ConnectError, Metadata};
 use crate::rf::RFClient;
 use colored::Colorize;
 use deku::prelude::*;

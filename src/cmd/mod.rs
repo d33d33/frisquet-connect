@@ -58,15 +58,19 @@ enum Commands {
     Promiscuous,
     /// set area1 prog
     Area1,
-    Sonde,
+    /// set exterior temp
+    Sonde {
+      /// exterior temperature C
+      temp: f32,
+    },
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-enum Entity {
+pub enum Entity {
     Connect,
-    Satellite_Z1,
-    Satellite_Z2,
-    Satellite_Z3,
+    SatelliteZ1,
+    SatelliteZ2,
+    SatelliteZ3,
     Sonde,
 }
 
@@ -90,7 +94,7 @@ impl Cli {
             Some(Commands::Data2) => data2::run(rf, config),
             Some(Commands::Data3) => data3::run(rf, config),
             Some(Commands::Data4) => data4::run(rf, config),
-            Some(Commands::Sonde) => sonde::run(rf, config),
+            Some(Commands::Sonde {temp})=> sonde::run(rf, temp, config),
             None => {
                 println!("main");
                 Ok(())
