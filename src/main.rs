@@ -1,4 +1,3 @@
-use crate::datasource::externaltemperature::homeassistant;
 use std::error::Error;
 
 pub mod cmd;
