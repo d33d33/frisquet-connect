@@ -71,21 +71,57 @@ impl Assert for SetExternalTemperatureReplyMsg {
 }
 
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
-pub struct SondeAssociationAnnounceMessage {
+pub struct ExternalTemperatureInitReply {
     #[deku(count = "0")]
     pub data: Vec<u8>,
 }
 
-impl fmt::Display for SondeAssociationAnnounceMessage {
+impl fmt::Display for ExternalTemperatureInitReply {
     fn fmt(&self, f: &mut fmt::Formatter) -> result::Result<(), Error> {
-        return Ok(write!(f, "SondeAssociationAnnounceMessage").expect("TODO: panic data"));
+        return Ok(write!(f, "ExternalTemperatureInitReply").expect("TODO: panic data"));
     }
 }
 
-impl Assert for SondeAssociationAnnounceMessage {
+impl Assert for ExternalTemperatureInitReply {
     fn assert(&self) -> bool {
         // self.len as usize == 0x06 // length is expected to represent the msg length(06)
         true
+    }
+}
+
+pub fn send_init(
+    rf: &mut Box<dyn RFClient>,
+    config: &mut config::Frisquet,
+) -> Result<(Metadata, ExternalTemperatureInitReply), ConnectError> {
+    rf.set_network_id(Vec::from(config.network_id()?))?;
+
+    let req_id = config.next_req_id()?;
+    send_cmd(
+        rf,
+        0x20, // from
+        0x80, // to
+        config.association_id()?,
+        req_id,
+        130,
+        65,
+        &ExternalTemperatureInitReply { data: vec![] },
+    )?;
+
+    loop {
+        match filter(
+            &rf.recv_timeout(Duration::new(15, 0))?,
+            0x80,
+            0x20,
+            config.association_id()?,
+            req_id,
+        )? {
+            Some(payload) => {
+                let (meta, data) = from_bytes(&payload)?;
+                println!("RECV {} {}", meta, data);
+                return Ok((meta, data));
+            }
+            None => {}
+        }
     }
 }
 
@@ -166,7 +202,7 @@ mod tests {
         let payload = hex::decode("06802020948241").unwrap();
 
         let (meta, data) = from_bytes(&payload).unwrap();
-        let x: SondeAssociationAnnounceMessage = data;
+        let x: ExternalTemperatureInitReply = data;
         assert_eq!(
             meta,
             Metadata {
@@ -179,7 +215,7 @@ mod tests {
                 msg_type: 65,
             }
         );
-        assert_eq!(x, SondeAssociationAnnounceMessage { data: vec![] });
+        assert_eq!(x, ExternalTemperatureInitReply { data: vec![] });
     }
 
     #[test]

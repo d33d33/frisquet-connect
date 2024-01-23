@@ -21,6 +21,7 @@ pub struct Config {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Frisquet {
+    pub send_init: bool,
     #[serde(serialize_with = "slice_as_hex", deserialize_with = "slice_from_hex")]
     pub network_id: Option<[u8; 4]>,
     #[serde(serialize_with = "u8_as_hex", deserialize_with = "u8_from_hex")]
@@ -88,7 +89,7 @@ impl Config {
     pub fn sonde(&mut self) -> Result<&mut Frisquet, ConfigError> {
         match &mut self.sonde {
             Some(frisquet) => Ok(frisquet),
-            None => Err(ConfigError::new("missing required config: frisquet")),
+            None => Err(ConfigError::new("missing required config: sonde")),
         }
     }
 
