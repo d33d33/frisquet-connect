@@ -1,3 +1,4 @@
+use std::io::Error;
 use std::time::{Duration, Instant};
 
 use crate::rf::{RFClient, RecvError, RecvTimeoutError, SendError};
