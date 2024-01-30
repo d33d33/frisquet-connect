@@ -94,13 +94,8 @@ impl fmt::Display for SetExternalTemperatureReplyMsg {
                         "\n\t {}",
                         format!("Seconds: {:0x}", self.second).bright_magenta()
                     )?;
-                    write!(
-                        f,
-                        "\n\t {}",
-                        format!("data: {:0x}", self.data).white()
-                    )?;
+                    write!(f, "\n\t {}", format!("data: {:0x}", self.data).white())?;
                     write!(f, "\n\t {}", format!("Weekday: {}", self.weekday).blue())
-
                 }
                 Err(_) => write!(f, "ERROR"),
             }

@@ -13,11 +13,11 @@ pub mod data2;
 pub mod data3;
 pub mod data4;
 pub mod date;
+pub mod holiday;
 pub mod pair;
 pub mod promiscuous;
 pub mod sensors;
 pub mod sonde;
-pub mod holiday;
 
 #[derive(Debug, PartialEq, DekuRead, DekuWrite, Clone)]
 #[deku(endian = "big")]
