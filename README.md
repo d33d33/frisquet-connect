@@ -41,6 +41,12 @@ cargo run -- pair
 cargo run -- sensors 
 ```
 
+### Set exteriror temperature
+
+``` bash
+cargo run -- sonde 12.4 
+```
+
 ### Configure area 1
 
 Update `area1` config in your `config.toml` (see template).
