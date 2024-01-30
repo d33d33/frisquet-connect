@@ -16,8 +16,8 @@ use super::Assert;
 #[derive(Debug, PartialEq, DekuRead, DekuWrite)]
 #[deku(endian = "big")]
 pub struct HolidayMsg {
-    cmd: [u8; 4],     // cmd
-    cmd2: [u8; 4],    // re cmd
+    cmd: [u8; 4],  // cmd
+    cmd2: [u8; 4], // re cmd
     len: u8,
     start: [u8; 8],
     end: [u8; 8],
@@ -53,21 +53,9 @@ impl fmt::Display for HolidayMsg {
                     format!("Cmd2: {}", hex::encode(self.cmd2)).magenta()
                 )?;
                 write!(f, "\n\t {}", format!("Length: {:0x}", self.len).yellow())?;
-                write!(
-                    f,
-                    "\n\t {}",
-                    format!("Start: {}", (self.start())).red()
-                )?;
-                write!(
-                    f,
-                    "\n\t {}",
-                    format!("End: {}", (self.end())).green()
-                )?;
-                write!(
-                    f,
-                    "\n\t {}",
-                    format!("Date1: {}", (self.date1())).cyan()
-                )
+                write!(f, "\n\t {}", format!("Start: {}", (self.start())).red())?;
+                write!(f, "\n\t {}", format!("End: {}", (self.end())).green())?;
+                write!(f, "\n\t {}", format!("Date1: {}", (self.date1())).cyan())
             }
             Err(_) => write!(f, "ERROR"),
         }
@@ -81,16 +69,25 @@ impl Assert for HolidayMsg {
 }
 
 impl HolidayMsg {
-    fn start(&self) -> chrono::NaiveDateTime{
-        let secs:i64 = (((self.start[2] as u32) << 24) + ((self.start[3] as u32) << 16) + ((self.start[0] as u32) << 8) + self.start[1] as u32) as i64; 
+    fn start(&self) -> chrono::NaiveDateTime {
+        let secs: i64 = (((self.start[2] as u32) << 24)
+            + ((self.start[3] as u32) << 16)
+            + ((self.start[0] as u32) << 8)
+            + self.start[1] as u32) as i64;
         chrono::NaiveDateTime::from_timestamp_opt(secs, 0).unwrap()
     }
-    fn end(&self) -> chrono::NaiveDateTime{
-        let secs:i64 = (((self.end[2] as u32) << 24) + ((self.end[3] as u32) << 16) + ((self.end[0] as u32) << 8) + self.end[1] as u32) as i64; 
+    fn end(&self) -> chrono::NaiveDateTime {
+        let secs: i64 = (((self.end[2] as u32) << 24)
+            + ((self.end[3] as u32) << 16)
+            + ((self.end[0] as u32) << 8)
+            + self.end[1] as u32) as i64;
         chrono::NaiveDateTime::from_timestamp_opt(secs, 0).unwrap()
     }
-    fn date1(&self) -> chrono::NaiveDateTime{
-        let secs:i64 = (((self.date1[2] as u32) << 24) + ((self.date1[3] as u32) << 16) + ((self.date1[0] as u32) << 8) + self.date1[1] as u32) as i64; 
+    fn date1(&self) -> chrono::NaiveDateTime {
+        let secs: i64 = (((self.date1[2] as u32) << 24)
+            + ((self.date1[3] as u32) << 16)
+            + ((self.date1[0] as u32) << 8)
+            + self.date1[1] as u32) as i64;
         chrono::NaiveDateTime::from_timestamp_opt(secs, 0).unwrap()
     }
 }

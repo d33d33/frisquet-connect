@@ -4,7 +4,7 @@ use hex;
 use std::collections::HashMap;
 
 use crate::config;
-use crate::connect::{area, boiler, from_bytes, sensors, ConnectError, Metadata, holiday};
+use crate::connect::{area, boiler, from_bytes, holiday, sensors, ConnectError, Metadata};
 use crate::rf::RFClient;
 
 use super::date;

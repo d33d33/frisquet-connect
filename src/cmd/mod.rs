@@ -12,6 +12,7 @@ pub mod data4;
 pub mod date;
 pub mod pair;
 pub mod promiscuous;
+pub mod run;
 pub mod sensors;
 pub mod sonde;
 
@@ -60,9 +61,11 @@ enum Commands {
     Area1,
     /// set exterior temp
     Sonde {
-      /// exterior temperature C
-      temp: f32,
+        /// exterior temperature C
+        temp: f32,
     },
+    /// daemon mode
+    Run,
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
@@ -94,7 +97,8 @@ impl Cli {
             Some(Commands::Data2) => data2::run(rf, config),
             Some(Commands::Data3) => data3::run(rf, config),
             Some(Commands::Data4) => data4::run(rf, config),
-            Some(Commands::Sonde {temp})=> sonde::run(rf, temp, config),
+            Some(Commands::Sonde { temp }) => sonde::run(rf, temp, config),
+            Some(Commands::Run) => run::run(rf, config),
             None => {
                 println!("main");
                 Ok(())
