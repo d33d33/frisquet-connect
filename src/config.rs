@@ -10,6 +10,7 @@ use toml;
 pub struct Config {
     pub frisquet: Option<Frisquet>,
     pub sonde: Option<Frisquet>,
+    pub home_assistant: Option<HAConfig>,
 
     pub serial: Option<Serial>,
     pub mqtt: Option<MQTT>,
@@ -21,13 +22,22 @@ pub struct Config {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Frisquet {
-    pub send_init: bool,
+    pub send_init: Option<bool>,
     #[serde(serialize_with = "slice_as_hex", deserialize_with = "slice_from_hex")]
     pub network_id: Option<[u8; 4]>,
     #[serde(serialize_with = "u8_as_hex", deserialize_with = "u8_from_hex")]
     pub association_id: Option<u8>,
     #[serde(serialize_with = "u8_as_hex", deserialize_with = "u8_from_hex")]
     pub request_id: Option<u8>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct HAConfig {
+    pub host: String,
+    pub port: u16,
+    pub token: String,
+    pub entity_id: String,
+    pub temperature_field: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -89,6 +99,13 @@ impl Config {
     pub fn sonde(&mut self) -> Result<&mut Frisquet, ConfigError> {
         match &mut self.sonde {
             Some(frisquet) => Ok(frisquet),
+            None => Err(ConfigError::new("missing required config: sonde")),
+        }
+    }
+
+    pub fn home_assistant(&mut self) -> Result<&mut HAConfig, ConfigError> {
+        match &mut self.home_assistant {
+            Some(home_assistant) => Ok(home_assistant),
             None => Err(ConfigError::new("missing required config: sonde")),
         }
     }

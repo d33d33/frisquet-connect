@@ -56,3 +56,10 @@ mode = "comfort"
 [[area1.sunday]]
 timeframe = "06h00-23h30"
 mode = "comfort"
+
+
+[home_assistant]
+host = "http://host:port"
+token = "long-living-token"
+entity_id = "weather.city"
+temperature_field = "temperature"

@@ -62,11 +62,11 @@ enum Commands {
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord, ValueEnum)]
-pub enum Entity {
+enum Entity {
     Connect,
-    SatelliteZ1,
-    SatelliteZ2,
-    SatelliteZ3,
+    Satellite_Z1,
+    Satellite_Z2,
+    Satellite_Z3,
     Sonde,
 }
 

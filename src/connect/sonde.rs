@@ -1,6 +1,7 @@
 use crate::config;
-use crate::connect::{filter, from_bytes, send_cmd, Assert, ConnectError, Metadata};
+use crate::connect::{filter, from_bytes, send_cmd, Assert, Cmd, ConnectError, Metadata};
 use crate::rf::RFClient;
+use colored::Colorize;
 use deku::prelude::*;
 use std::fmt::Error;
 use std::time::Duration;
@@ -59,8 +60,49 @@ pub struct SetExternalTemperatureReplyMsg {
 }
 
 impl fmt::Display for SetExternalTemperatureReplyMsg {
-    fn fmt(&self, f: &mut fmt::Formatter) -> result::Result<(), Error> {
-        return Ok(write!(f, "SetExternalTemperatureReplyMsg").expect("TODO: panic data"));
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        {
+            match self.to_bytes().map(hex::encode) {
+                Ok(data) => {
+                    write!(
+                        f,
+                        "{}{}{}{}{}{}{}{}",
+                        data[0..2].yellow(),
+                        data[2..4].blue(),
+                        data[4..6].purple(),
+                        data[6..8].bright_yellow(),
+                        data[8..10].red(),
+                        data[10..12].green(),
+                        data[12..14].bright_magenta(),
+                        data[14..18].white(),
+                    )?;
+
+                    write!(f, "\n    SetExternalTemperatureReplyMsg")?;
+                    write!(f, "\n\t {}", format!("Length: {}", self.len).yellow())?;
+                    write!(f, "\n\t {}", format!("Year: {:0x}", self.year).blue())?;
+                    write!(f, "\n\t {}", format!("Month: {:0x}", self.month).purple())?;
+                    write!(
+                        f,
+                        "\n\t {}",
+                        format!("Day: {:0x}", self.day).bright_yellow()
+                    )?;
+                    write!(f, "\n\t {}", format!("Hour: {:0x}", self.hour).red())?;
+                    write!(f, "\n\t {}", format!("Minutes: {:0x}", self.minute).green())?;
+                    write!(
+                        f,
+                        "\n\t {}",
+                        format!("Seconds: {:0x}", self.second).bright_magenta()
+                    )?;
+
+                    write!(
+                        f,
+                        "\n\t {}",
+                        format!("data: {}", hex::encode(self.data.as_slice())).white()
+                    )
+                }
+                Err(_) => write!(f, "ERROR"),
+            }
+        }
     }
 }
 
@@ -102,9 +144,9 @@ pub fn send_init(
         0x80, // to
         config.association_id()?,
         req_id,
-        130,
-        65,
-        &ExternalTemperatureInitReply { data: vec![] },
+        1,
+        67,
+        &ExternalTemperatureInitMsg { data: vec![0, 0] },
     )?;
 
     loop {
@@ -128,7 +170,7 @@ pub fn send_init(
 pub fn send_temperature(
     rf: &mut Box<dyn RFClient>,
     config: &mut config::Frisquet,
-    temperature: i16,
+    temperature: f32,
 ) -> Result<(Metadata, SetExternalTemperatureReplyMsg), ConnectError> {
     rf.set_network_id(Vec::from(config.network_id()?))?;
 
@@ -141,10 +183,10 @@ pub fn send_temperature(
         config.association_id()?,
         req_id,
         1,
-        03,
+        0x17,
         &SetExternalTemperatureMsg {
             data: [156, 84, 0, 4, 160, 41, 0, 1, 2],
-            temperature,
+            temperature: (temperature * 10.0) as i16,
         },
     )?;
 
