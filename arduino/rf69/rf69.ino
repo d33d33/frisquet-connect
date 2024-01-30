@@ -7,6 +7,10 @@
 
 
 /************ Radio Setup ***************/
+
+// Change to 434.0 or other frequency, must match RX's freq!
+#define RF69_FREQ 868.96
+
 // First 3 here are boards w/radio BUILT-IN. Boards using FeatherWing follow.
 #if defined (__AVR_ATmega32U4__)  // Feather 32u4 w/Radio
   #define RFM69_CS    8
@@ -75,6 +79,8 @@
 // Singleton instance of the radio driver
 RH_RF69 rf69(RFM69_CS, RFM69_INT);
 
+String serial;
+
 void setup() {
   Serial.begin(115200);
   while (!Serial) delay(1); // Wait for Serial Console (comment out line if no computer)
@@ -82,9 +88,6 @@ void setup() {
   pinMode(LED, OUTPUT);
   pinMode(RFM69_RST, OUTPUT);
   digitalWrite(RFM69_RST, LOW);
-
-  Serial.println("Feather RFM69!");
-  Serial.println();
 
   // manual reset
   digitalWrite(RFM69_RST, HIGH);
@@ -97,7 +100,7 @@ void setup() {
     while (1);
   }
   Serial.println("RFM69 radio init OK!");
-  if (!rf69.setFrequency(868.96)) {
+  if (!rf69.setFrequency(RF69_FREQ)) {
     Serial.println("setFrequency failed");
     while (1);
   }
@@ -121,6 +124,8 @@ void setup() {
 
   uint8_t syncwords[] = { 0xff, 0xff, 0xff, 0xff }; // pairing
   rf69.setSyncWords(syncwords, sizeof(syncwords));
+
+  Serial.print("RFM69 radio @");  Serial.print((int)RF69_FREQ);  Serial.println(" MHz");
 }
 
 int now = millis();
@@ -168,20 +173,108 @@ void loop()
   if (millis() - now > 1000) {
       digitalWrite(LED, LOW);
 //    Serial.println(rf69.maxMessageLength());
-    Serial.print("echo");
-    Serial.println(now);
     now = millis();
   }
 
   if (Serial.available() > 0) {
     // read the incoming byte:
-    int incomingByte = 0; // for incoming serial data
-    incomingByte = Serial.read();
+    char iByte = 0;
+    iByte = Serial.read();
 
-    // say what you got:
-    Serial.print("Received: ");
-    Serial.println(incomingByte, DEC);
+    if (iByte == '\r') {
+
+    } if (iByte == '\n') {
+      Serial.print("Received: ");
+      Serial.println(serial);
+
+      String cmd = serial.substring(0, 3);
+      String data = serial.substring(5);
+      serial.remove(0);
+
+      if (cmd == "NID") {
+        uint8_t syncwords[4];
+        uint8_t len = sizeof(syncwords);
+        if(stou(data, syncwords, &len)) {
+          rf69.setSyncWords(syncwords, len);
+        } else {
+          Serial.println("bad data");
+        }
+      }
+      if (cmd == "CMD") {
+        uint8_t buf[255];
+        uint8_t len = sizeof(buf);
+        if(stou(data, buf, &len)) {
+          Serial.print("len: ");
+          Serial.println(buf[0]);
+
+          Serial.print("to: ");
+          Serial.println(buf[1]);
+          rf69.setHeaderTo(buf[1]);
+
+          Serial.print("from: ");
+          Serial.println(buf[2]);
+          rf69.setHeaderFrom(buf[2]);
+
+          rf69.setHeaderId(buf[3]);
+          rf69.setHeaderFlags(buf[4], 0xFF);
+          if(!rf69.send(buf+5, buf[0] -4)) {
+
+          }
+        } else {
+          Serial.println("bad data");
+        }
+      }
+    } else {
+      serial.concat(iByte);
+    }
+
   }
+}
+
+
+bool stou(String data, uint8_t* buf, uint8_t* len) {
+  if (data.length() % 2 != 0) {
+    *len = 0;
+    return false;
+  }
+  for(int i = 0; i < data.length(); i+=2) {
+    if (i>>1 > *len) {
+      return true;
+    }
+
+    uint8_t v = nibble(data[i]);
+    if (v == -1) {
+      *len = i>>1;
+      return false;
+    }
+    buf[i>>1] = v << 4;
+
+    v = nibble(data[i+1]);
+    if (v == -1) {
+      *len = i>>1;
+      return false;
+    }
+    buf[i>>1] += v;
+  }
+  *len = data.length() >> 1;
+  return true;
+}
+
+uint8_t nibble(char c)
+{
+  if (c >= '0' && c <= '9') {
+    return c - '0';
+  }
+
+  if (c >= 'a' && c <= 'f') {
+    return c - 'a' + 10;
+  }
+
+  if (c >= 'A' && c <= 'F') {
+    return  c - 'A' + 10;
+  }
+
+  return -1;
 }
 
 void printHex(byte n) {
